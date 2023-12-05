@@ -15,8 +15,8 @@ public class Day02 {
 
         long start = System.currentTimeMillis();
         /*12 red cubes, 13 green cubes, and 14 blue cubes*/
-        part1();
-        //part2();
+        //part1();
+        part2();
         System.out.println("Elapsed time: " + (System.currentTimeMillis() - start));
     }
 
@@ -43,18 +43,48 @@ public class Day02 {
     public static void part2() throws IOException {
         System.out.println("Part 2");
 
+        try (Stream<String> stream = Files.lines(Paths.get("./src/problems/Day02/input.txt"))) {
+            int value = stream
+                    .map(Game::new)
+                    .map(Day02::findSetUnion)
+                    .map(Day02::power)
+                    .reduce(0, Integer::sum);
+            System.out.println("De som van de power van alle minimale sets is: " + value);
+        } catch (IOException e) {
+            System.err.println("Problem reading file " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     // --- Helper functions ---
     static boolean isGamePossible(Game game, Set actual) {
-        return !game.sets.stream()
-                .anyMatch(set -> isSetImpossible(set, actual));
+        return game.sets.stream()
+                .noneMatch(set -> isSetImpossible(set, actual));
     }
 
     static boolean isSetImpossible(Set set, Set actual) {
         return set.red > actual.red
                 || set.green > actual.green
                 || set.blue > actual.blue;
+    }
+
+    static Set union(Set addToUnion, Set collector) {
+        collector.red = Math.max(addToUnion.red, collector.red);
+        collector.green = Math.max(addToUnion.green, collector.green);
+        collector.blue = Math.max(addToUnion.blue, collector.blue);
+        return collector;
+    }
+
+    static int power(Set set) {
+        return set.red * set.green * set.blue;
+    }
+
+    static Set findSetUnion(Game game) {
+        Set collector = new Set(0,0,0);
+        game.sets.stream()
+                .map(set -> union(set, collector))
+                .collect(Collectors.toList());
+        return collector;
     }
 }
 
